@@ -1,6 +1,12 @@
 import { useRef, useState } from "react";
 import Header from "./Header";
 import { validateUserIntput } from "../utils/userInputValidation";
+import {
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+} from "firebase/auth";
+import { auth } from "../config/firebaseConfig";
+import getErrorMessage from "../utils/getErrorMessage";
 
 const Login = () => {
   const [isLoginScreen, setIsLoginScreen] = useState(true);
@@ -11,7 +17,8 @@ const Login = () => {
   let userPasswordRef = useRef(null);
   let userConfirmPasswordRef = useRef(null);
 
-  function signInOrSignUpUser() {
+  function signInOrSignUpUser(e) {
+    e.preventDefault();
     const returnObj = isLoginScreen
       ? validateUserIntput(
           userEmailRef.current.value,
@@ -23,12 +30,47 @@ const Login = () => {
           userConfirmPasswordRef.current.value
         );
 
-    if (!returnObj.status) setErrorMsg(returnObj.message);
-    else setErrorMsg("");
+    console.log("re:", returnObj.status);
+
+    if (!returnObj.status) setErrorMsg("Error: " + returnObj.message);
+    else {
+      setErrorMsg("");
+      if (isLoginScreen) {
+        signInWithEmailAndPassword(
+          auth,
+          userEmailRef.current.value,
+          userPasswordRef.current.value
+        )
+          .then((userCredential) => {
+            // Signed in
+            const user = userCredential.user;
+            console.log(user);
+          })
+          .catch((error) => {
+            setErrorMsg("Error: " + getErrorMessage(error?.code));
+          });
+      } else {
+        createUserWithEmailAndPassword(
+          auth,
+          userEmailRef.current.value,
+          userPasswordRef.current.value
+        )
+          .then((userCredential) => {
+            // Signed in
+            const user = userCredential.user;
+            console.log(user);
+            // ...
+          })
+          .catch((error) => {
+            setErrorMsg("Error: " + getErrorMessage(error?.code));
+          });
+      }
+    }
   }
 
   function changeForm() {
     setIsLoginScreen(!isLoginScreen);
+    setErrorMsg("");
   }
 
   return (
@@ -48,7 +90,7 @@ const Login = () => {
           <h2 className="text-3xl mb-5">
             {isLoginScreen ? "Sign In" : "Sign up"}
           </h2>
-          <form className="flex flex-col">
+          <form className="flex flex-col" onSubmit={signInOrSignUpUser}>
             {!isLoginScreen && (
               <input
                 ref={userNameRef}
@@ -71,23 +113,18 @@ const Login = () => {
             ></input>
             {!isLoginScreen && (
               <input
+                required
                 ref={userConfirmPasswordRef}
                 type="password"
                 placeholder="Confirm Password"
                 className="w-full h-10 text-[1rem] px-2 bg-gray-500"
               ></input>
             )}
-            <button
-              className="bg-red-500 py-2 rounded-sm my-5"
-              onClick={(e) => {
-                e.preventDefault();
-                signInOrSignUpUser();
-              }}
-            >
+            <button className="bg-red-500 py-2 rounded-sm my-5" type="submit">
               {isLoginScreen ? "Sign In" : "Sign up"}
             </button>
           </form>
-          <p>{errorMsg}</p>
+          <p className="text-red-600">{errorMsg}</p>
           <p>
             {!isLoginScreen ? "Already have an account!" : "New to Netflix?"}
             <span
