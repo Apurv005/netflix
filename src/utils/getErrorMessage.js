@@ -6,6 +6,9 @@ function getErrorMessage(errorCode) {
       return "Please enter a valid email address.";
     case "auth/weak-password":
       return "Password should be at least 6 characters.";
+    case "auth/user-not-found":
+      return "User doesn't exists!!";
+
     default:
       return "An unexpected error occurred. Please try again.";
   }

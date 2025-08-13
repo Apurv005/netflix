@@ -4,13 +4,20 @@ import { validateUserIntput } from "../utils/userInputValidation";
 import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
+  updateProfile,
 } from "firebase/auth";
 import { auth } from "../config/firebaseConfig";
 import getErrorMessage from "../utils/getErrorMessage";
+import { useNavigate } from "react-router-dom";
+import { useDispatch } from "react-redux";
+import { addUser } from "../utils/userSlice";
 
 const Login = () => {
+  const navigate = useNavigate();
   const [isLoginScreen, setIsLoginScreen] = useState(true);
   const [errorMsg, setErrorMsg] = useState("");
+
+  const dispatch = useDispatch();
 
   let userNameRef = useRef(null);
   let userEmailRef = useRef(null);
@@ -44,6 +51,8 @@ const Login = () => {
           .then((userCredential) => {
             // Signed in
             const user = userCredential.user;
+            navigate("/browse");
+
             console.log(user);
           })
           .catch((error) => {
@@ -55,11 +64,21 @@ const Login = () => {
           userEmailRef.current.value,
           userPasswordRef.current.value
         )
-          .then((userCredential) => {
-            // Signed in
-            const user = userCredential.user;
-            console.log(user);
-            // ...
+          .then(() => {
+            updateProfile(auth.currentUser, {
+              displayName: userNameRef?.current?.value,
+            })
+              .then(() => {
+                let user = auth.currentUser;
+                const uid = user.uid;
+                const userName = user?.displayName;
+                const userEmail = user.email;
+                dispatch(addUser({ uid, userName, userEmail }));
+                navigate("/browse");
+              })
+              .catch((error) => {
+                setErrorMsg("Error: " + getErrorMessage(error?.code));
+              });
           })
           .catch((error) => {
             setErrorMsg("Error: " + getErrorMessage(error?.code));
@@ -117,15 +136,15 @@ const Login = () => {
                 ref={userConfirmPasswordRef}
                 type="password"
                 placeholder="Confirm Password"
-                className="w-full h-10 text-[1rem] px-2 bg-gray-500"
+                className="w-full h-10 text-[1rem] px-2 mb-5 bg-gray-500"
               ></input>
             )}
-            <button className="bg-red-500 py-2 rounded-sm my-5" type="submit">
+            <button className="bg-red-500 py-2 rounded-sm " type="submit">
               {isLoginScreen ? "Sign In" : "Sign up"}
             </button>
           </form>
           <p className="text-red-600">{errorMsg}</p>
-          <p>
+          <p className="mt-2">
             {!isLoginScreen ? "Already have an account!" : "New to Netflix?"}
             <span
               className="underline hover:cursor-pointer"

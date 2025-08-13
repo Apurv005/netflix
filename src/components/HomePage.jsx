@@ -1,4 +1,7 @@
+import { useNavigate } from "react-router-dom";
+
 const HomePage = () => {
+  const navigate = useNavigate();
   return (
     <div>
       <div className="">
@@ -9,7 +12,10 @@ const HomePage = () => {
               className="w-40"
             ></img>
 
-            <button className="bg-red-700 px-4 py-[6px] rounded-sm text-white self-center text-[15px]">
+            <button
+              className="bg-red-700 px-4 py-[6px] rounded-sm text-white self-center text-[15px] cursor-pointer"
+              onClick={() => navigate("/login")}
+            >
               Sign in
             </button>
           </div>
